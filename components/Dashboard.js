@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { kpis, agentQuickActions } from "@/lib/data";
 
 const nav = [
@@ -22,8 +22,19 @@ const tabs = [
   { key: "high", label: "High-Value", count: kpis[3].value },
 ];
 
-function today() {
-  return new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+function greetingFor(d) {
+  const h = d.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
 export default function Dashboard() {
@@ -32,6 +43,13 @@ export default function Dashboard() {
   const [panelOpen, setPanelOpen] = useState(true);
   const [query, setQuery] = useState("");
   const panelRef = useRef(null);
+  const [now, setNow] = useState(null); // set after mount to avoid hydration mismatch
+
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="db">
@@ -77,12 +95,13 @@ export default function Dashboard() {
         <div className="db-body">
           <div className="db-greet-row">
             <div>
-              <h1>Good morning! 👋</h1>
+              <h1>{now ? greetingFor(now) : "Welcome"}! 👋</h1>
               <p>Here&apos;s your tender intelligence overview</p>
             </div>
             <div className="db-date-card">
               <span>📅 Today</span>
-              <strong>{today()}</strong>
+              <strong>{now ? fmtDate(now) : "—"}</strong>
+              <span>{now ? fmtTime(now) : ""}</span>
             </div>
           </div>
 
